@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigate
 import androidx.navigation.compose.rememberNavController
 import com.example.androiddevchallenge.ui.theme.MyTheme
 import dev.chrisbanes.accompanist.insets.ProvideWindowInsets
@@ -75,7 +76,11 @@ fun MyApp() {
 
     Surface(color = MaterialTheme.colors.background) {
         NavHost(navController, startDestination = Route.Welcome) {
-            composable(Route.Welcome) { WelcomeScreen() }
+            composable(Route.Welcome) {
+                WelcomeScreen(onLoginClick = {
+                    navController.navigate(Route.Login)
+                })
+            }
             composable(Route.Login) { LoginScreen() }
             composable(Route.Home) { HomeScreen() }
         }
@@ -126,8 +131,7 @@ fun WelcomeScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                ,
+                    .padding(horizontal = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
@@ -146,7 +150,7 @@ fun WelcomeScreen(
                 )
                 Button(
                     colors = buttonColors(backgroundColor = MaterialTheme.colors.secondary),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = MaterialTheme.shapes.medium,
                     onClick = { },
                     modifier = Modifier
                         .padding(bottom = 8.dp)
