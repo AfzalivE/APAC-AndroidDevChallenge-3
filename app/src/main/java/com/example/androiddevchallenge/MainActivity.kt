@@ -17,26 +17,49 @@ package com.example.androiddevchallenge
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ButtonDefaults.buttonColors
+import androidx.compose.material.Card
+import androidx.compose.material.Checkbox
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Filter
+import androidx.compose.material.icons.filled.Filter1
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sort
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,9 +67,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
@@ -55,6 +80,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigate
@@ -89,25 +115,179 @@ fun MyApp(isDark: Boolean = isSystemInDarkTheme()) {
         modifier = Modifier.fillMaxSize()
     ) {
         NavHost(navController, startDestination = Route.Welcome) {
-            composable(Route.Welcome) {
-                WelcomeScreen(
-                    isDark = isDark,
-                    onLoginClick = {
-                        navController.navigate(Route.Login)
-                    })
-            }
-            composable(Route.Login) { LoginScreen() }
+            composable(Route.Welcome) { WelcomeScreen(navController, isDark = isDark) }
+            composable(Route.Login) { LoginScreen(navController) }
             composable(Route.Home) { HomeScreen() }
         }
     }
 }
 
+data class Plant(
+    val name: String,
+    val description: String = "This is a description",
+    @DrawableRes val image: Int,
+)
+
+val gardenThemes = arrayListOf(
+    Plant("Desert chic", image = R.drawable.desert_chic),
+    Plant("Tiny terrariums", image = R.drawable.tiny_terrariums),
+    Plant("Jungle vibes", image = R.drawable.jungle_vibes),
+    Plant("Easy care", image = R.drawable.easy_care),
+    Plant("Statements", image = R.drawable.statements)
+)
+
+val plants = arrayListOf(
+    Plant("Monstera", image = R.drawable.monstera),
+    Plant("Aglaonema", image = R.drawable.aglaonema),
+    Plant("Peace lily", image = R.drawable.peace_lily),
+    Plant("Fiddle leaf tree", image = R.drawable.fiddle_leaf),
+    Plant("Snake plant", image = R.drawable.snake_plant),
+    Plant("Pothos", image = R.drawable.pothos),
+
+    )
+
 @Composable
 fun HomeScreen() {
+    var searchTextValue by remember { mutableStateOf(TextFieldValue()) }
+
+    Column(
+        modifier = Modifier
+            .padding(top = 40.dp)
+            .scrollable(rememberScrollState(), Orientation.Vertical)
+    ) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            value = searchTextValue,
+            onValueChange = {
+                searchTextValue = it
+            },
+            leadingIcon = {
+                Icon(
+                    modifier = Modifier.size(18.dp),
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(id = R.string.search)
+                )
+            },
+            label = {
+                Text(
+                    style = MaterialTheme.typography.body1,
+                    text = stringResource(id = R.string.search)
+                )
+            }
+        )
+
+        Text(
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .baselineHeight(32.dp),
+            style = MaterialTheme.typography.h1,
+            text = stringResource(id = R.string.browse_themes)
+        )
+
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+            content = {
+                this.items(gardenThemes) {
+                    Card(
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier
+                            .requiredHeight(136.dp)
+                            .aspectRatio(1f)
+                            .padding(horizontal = 4.dp),
+                        elevation = 4.dp
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colors.surface)
+                        ) {
+                            Image(
+                                painter = painterResource(it.image),
+                                contentDescription = it.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.height(96.dp)
+                            )
+                            Text(
+                                text = it.name,
+                                style = MaterialTheme.typography.h2,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .baselineHeight(16.dp)
+                                    .padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        )
+
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Text(
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .baselineHeight(40.dp)
+                    .weight(1f),
+                text = stringResource(id = R.string.design_your_home_garden),
+                style = MaterialTheme.typography.h1,
+            )
+            IconButton(onClick = { }) {
+                Icon(imageVector = Icons.Filled.FilterList, contentDescription = "Filter")
+            }
+        }
+
+        LazyColumn(
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+            modifier = Modifier.fillMaxWidth(),
+            content = {
+                items(plants) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .requiredHeight(64.dp)
+                            .padding(vertical = 4.dp)
+                    ) {
+                        var checkedState by remember { mutableStateOf(false) }
+                        Image(
+                            painter = painterResource(id = it.image),
+                            contentDescription = it.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .aspectRatio(1f)
+                                .clip(MaterialTheme.shapes.small)
+                        )
+                        Column(modifier = Modifier
+                            .weight(1f, true)
+                            .padding(start = 16.dp)
+                        ) {
+                            Text(
+                                text = it.name,
+                                style = MaterialTheme.typography.h2,
+                                modifier = Modifier.baselineHeight(24.dp)
+                            )
+                            Text(text = it.description, style = MaterialTheme.typography.body1)
+                        }
+                        Checkbox(
+                            checked = checkedState,
+                            onCheckedChange = { checkedState = it },
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                    }
+                }
+            })
+    }
 }
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(navController: NavController = rememberNavController()) {
     var emailTextValue by remember { mutableStateOf(TextFieldValue()) }
     var passwordTextValue by remember { mutableStateOf(TextFieldValue()) }
 
@@ -155,7 +335,10 @@ fun LoginScreen() {
         Button(
             colors = buttonColors(backgroundColor = MaterialTheme.colors.secondary),
             shape = MaterialTheme.shapes.medium,
-            onClick = { },
+            onClick = {
+                // after performing validation
+                navController.navigate(Route.Home)
+            },
             modifier = Modifier
                 .padding(bottom = 8.dp, top = 16.dp)
                 .height(48.dp)
@@ -188,8 +371,8 @@ private fun LoginTextField(
 
 @Composable
 fun WelcomeScreen(
+    navController: NavController,
     isDark: Boolean = isSystemInDarkTheme(),
-    onLoginClick: () -> Unit = {},
 ) {
     val welcomeBg = if (isDark) R.drawable.ic_dark_welcome_bg else R.drawable.ic_light_welcome_bg
     val illos = if (isDark) R.drawable.ic_dark_welcome_illos else R.drawable.ic_light_welcome_illos
@@ -249,7 +432,9 @@ fun WelcomeScreen(
                 }
                 TextButton(
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colors.onPrimary),
-                    onClick = onLoginClick,
+                    onClick = {
+                        navController.navigate(Route.Login)
+                    },
                     modifier = Modifier.height(48.dp)
                 ) {
                     Text(text = stringResource(id = R.string.login))
@@ -269,7 +454,8 @@ fun LightPreview() {
         ) {
             ProvideWindowInsets {
                 // WelcomeScreen()
-                LoginScreen()
+                // LoginScreen()
+                HomeScreen()
             }
         }
     }
@@ -285,7 +471,8 @@ fun DarkPreview() {
         ) {
             ProvideWindowInsets {
                 // WelcomeScreen(isDark = true)
-                LoginScreen()
+                // LoginScreen()
+                HomeScreen()
             }
         }
     }

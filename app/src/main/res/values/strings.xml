@@ -18,4 +18,7 @@
     <string name="terms">By clicking below, you agree to our Terms of Use and consent to our Privacy Policy.</string>
     <string name="email_address">Email address</string>
     <string name="password">Password (8+ characters)</string>
+    <string name="browse_themes">Browse themes</string>
+    <string name="design_your_home_garden">Design your home garden</string>
+    <string name="search">Search</string>
 </resources>
