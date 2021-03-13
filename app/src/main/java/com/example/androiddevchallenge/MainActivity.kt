@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,20 +29,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.ButtonDefaults.buttonColors
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -71,15 +81,20 @@ class MainActivity : AppCompatActivity() {
 
 // Start building your app here!
 @Composable
-fun MyApp() {
+fun MyApp(isDark: Boolean = isSystemInDarkTheme()) {
     val navController = rememberNavController()
 
-    Surface(color = MaterialTheme.colors.background) {
+    Surface(
+        color = MaterialTheme.colors.background,
+        modifier = Modifier.fillMaxSize()
+    ) {
         NavHost(navController, startDestination = Route.Welcome) {
             composable(Route.Welcome) {
-                WelcomeScreen(onLoginClick = {
-                    navController.navigate(Route.Login)
-                })
+                WelcomeScreen(
+                    isDark = isDark,
+                    onLoginClick = {
+                        navController.navigate(Route.Login)
+                    })
             }
             composable(Route.Login) { LoginScreen() }
             composable(Route.Home) { HomeScreen() }
@@ -93,22 +108,95 @@ fun HomeScreen() {
 
 @Composable
 fun LoginScreen() {
+    var emailTextValue by remember { mutableStateOf(TextFieldValue()) }
+    var passwordTextValue by remember { mutableStateOf(TextFieldValue()) }
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            style = MaterialTheme.typography.h1,
+            modifier = Modifier
+                .baselineHeight(184.dp)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
+            text = stringResource(id = R.string.login_with_email)
+        )
+
+        LoginTextField(
+            value = emailTextValue,
+            onValueChange = { emailTextValue = it },
+            text = stringResource(id = R.string.email_address),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        LoginTextField(
+            value = passwordTextValue,
+            onValueChange = { passwordTextValue = it },
+            text = stringResource(id = R.string.password),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Text(
+            text = buildAnnotatedString {
+                append(stringResource(id = R.string.terms))
+                addStyle(SpanStyle(textDecoration = TextDecoration.Underline), 36, 48)
+                addStyle(SpanStyle(textDecoration = TextDecoration.Underline), 68, 82)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .baselineHeight(24.dp),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.body2
+        )
+
+        Button(
+            colors = buttonColors(backgroundColor = MaterialTheme.colors.secondary),
+            shape = MaterialTheme.shapes.medium,
+            onClick = { },
+            modifier = Modifier
+                .padding(bottom = 8.dp, top = 16.dp)
+                .height(48.dp)
+                .fillMaxWidth()
+        ) {
+            Text(text = stringResource(id = R.string.login))
+        }
+    }
+}
+
+@Composable
+private fun LoginTextField(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.height(56.dp),
+        label = {
+            Text(
+                style = MaterialTheme.typography.body1,
+                text = text
+            )
+        }
+    )
 }
 
 @Composable
 fun WelcomeScreen(
+    isDark: Boolean = isSystemInDarkTheme(),
     onLoginClick: () -> Unit = {},
 ) {
-    val dark = isSystemInDarkTheme()
-
-    val welcomeBg = if (dark) R.drawable.ic_dark_welcome_bg else R.drawable.ic_light_welcome_bg
-    val illos = if (dark) R.drawable.ic_dark_welcome_illos else R.drawable.ic_light_welcome_illos
-    val logo = if (dark) R.drawable.ic_dark_logo else R.drawable.ic_light_logo
+    val welcomeBg = if (isDark) R.drawable.ic_dark_welcome_bg else R.drawable.ic_light_welcome_bg
+    val illos = if (isDark) R.drawable.ic_dark_welcome_illos else R.drawable.ic_light_welcome_illos
+    val logo = if (isDark) R.drawable.ic_dark_logo else R.drawable.ic_light_logo
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colors.primary)
+        modifier = Modifier.background(MaterialTheme.colors.primary)
     ) {
         Image(
             modifier = Modifier.fillMaxSize(),
@@ -175,8 +263,14 @@ fun WelcomeScreen(
 @Composable
 fun LightPreview() {
     MyTheme {
-        ProvideWindowInsets {
-            WelcomeScreen()
+        Surface(
+            color = MaterialTheme.colors.background,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ProvideWindowInsets {
+                // WelcomeScreen()
+                LoginScreen()
+            }
         }
     }
 }
@@ -185,8 +279,14 @@ fun LightPreview() {
 @Composable
 fun DarkPreview() {
     MyTheme(darkTheme = true) {
-        ProvideWindowInsets {
-            WelcomeScreen()
+        Surface(
+            color = MaterialTheme.colors.background,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ProvideWindowInsets {
+                // WelcomeScreen(isDark = true)
+                LoginScreen()
+            }
         }
     }
 }
